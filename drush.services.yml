@@ -1,0 +1,6 @@
+services:
+  cap_monitor.commands:
+    class: \Drupal\cap_monitor\Commands\MonitorCommands
+    arguments: ['@http_client']
+    tags:
+      - { name: drush.command }
