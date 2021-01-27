@@ -107,7 +107,6 @@ class  MonitorCommands extends DrushCommands {
       return $cache->data;
     }
 
-
     $client_id = Settings::get('CAP_USER');
     $client_secret = Settings::get('CAP_PASSWORD');
     $options = [
@@ -115,16 +114,11 @@ class  MonitorCommands extends DrushCommands {
       'auth' => [$client_id, $client_secret],
     ];
     $response = $this->client->request('get', self::AUTH_URL, $options);
-    if ($response->getStatusCode() !== 200) {
-      \Drupal::logger('cap_monitor')
-        ->critical(t('Unable to get new CAP access token'));
-      return FALSE;
-    }
-
     $body = json_decode((string) $response->getBody(), TRUE);
 
     \Drupal::cache()
       ->set('cap_access_token', $body['access_token'], time() + $body['expires_in']);
+    return $body['access_token'];
   }
 
 }
