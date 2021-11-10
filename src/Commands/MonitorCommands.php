@@ -76,7 +76,8 @@ class  MonitorCommands extends DrushCommands {
         ]);
 
         if ($mail) {
-          mail('pookmish@stanford.edu', 'CAP Monitoring', '0 results seen from the CAP API at ' . date('Y-m-d H:i') . PHP_EOL . PHP_EOL . $result->getBody() . PHP_EOL . PHP_EOL . var_export($result->getHeaders(), TRUE));
+          $headers = "From: pookmish@stanford.edu\r\n";
+          mail('pookmish@stanford.edu', 'CAP Monitoring', '0 results seen from the CAP API at ' . date('Y-m-d H:i') . PHP_EOL . PHP_EOL . $result->getBody() . PHP_EOL . PHP_EOL . var_export($result->getHeaders(), TRUE), $headers);
           $mail = FALSE;
         }
       }
