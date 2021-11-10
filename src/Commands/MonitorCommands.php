@@ -67,7 +67,7 @@ class  MonitorCommands extends DrushCommands {
       $result = $this->client->request('get', $url, $options);
       $response = json_decode((string) $result->getBody(), TRUE);
 
-      if (empty($reponse['values']) || !count($response['values'])) {
+      if (empty($response['values']) || !count($response['values'])) {
         $logger = \Drupal::logger('cap_monitor');
         $logger->critical(t('EMPTY: @body  url: %url'), [
           '@headers' => var_export($result->getHeaders(), TRUE),
