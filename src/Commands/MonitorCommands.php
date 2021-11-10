@@ -5,6 +5,8 @@ namespace Drupal\cap_monitor\Commands;
 use Drupal\Core\Site\Settings;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\Client;
+use GuzzleHttp\TransferStats;
+use Drupal\Core\Cache\Cache;;
 
 class  MonitorCommands extends DrushCommands {
 
@@ -51,16 +53,30 @@ class  MonitorCommands extends DrushCommands {
       'https://cap.stanford.edu/cap-api/api/profiles/v1?uids=teruel1,dbush1&whitelist=uid,displayName',
     ];
 
-    $options = ['query' => ['access_token' => $access_token]];
+    $effective_uri = '';
+    $options = [
+      'on_stats' => function (TransferStats $stats) use (&$effective_uri) {
+        $effective_uri = (string) $stats->getEffectiveUri();
+      },
+    ];
     foreach ($urls as $url) {
+      $url .= '&access_token='. $access_token;
       $result = $this->client->request('get', $url, $options);
       $response = json_decode((string) $result->getBody(), TRUE);
 
-      $this->compareCapResponses($url, $response);
+      if (empty($reponse['values'])) {
+        $logger->critical(t('EMPTY: @body  url: %url'), [
+          '@headers' => $headers,
+          '@body' => $result->getBody(),
+          '%url' => $effective_uri,
+        ]);
+
+      }
+      $this->compareCapResponses($url, $response, $effective_uri);
     }
   }
 
-  protected function compareCapResponses($url, $response) {
+  protected function compareCapResponses($url, $response, $effective_uri) {
     $url_hash = substr(md5($url), 0, 10);
     $cache = \Drupal::cache()->get("cap:$url_hash");
     // Nothing to compare.
@@ -73,19 +89,22 @@ class  MonitorCommands extends DrushCommands {
 
     $old_data = $cache->data;
     if (count($old_data['values']) != count($response['values'])) {
-
+      Cache::invalidateTags(['rendered']);
       if (count($old_data['values']) > count($response['values'])) {
-        $logger->critical(t('Different number of profiles. %old in the original dataset, %new in the new dataset'), [
+        $logger->critical(t('Different number of profiles. %old in the original dataset, %new in the new dataset. URL: %url'), [
           '%old' => count($old_data['values']),
           '%new' => count($response['values']),
+          '%url' => $effective_uri,
         ]);
       }
       else {
-        $logger->info(t('Different number of profiles. %old in the original dataset, %new in the new dataset'), [
+        $logger->critical(t('Different number of profiles. %old in the original dataset, %new in the new dataset. URL: %url'), [
           '%old' => count($old_data['values']),
           '%new' => count($response['values']),
+          '%url' => $effective_uri,
         ]);
       }
+
     }
 
     foreach ($old_data['values'] as $old_data_profile) {
@@ -96,7 +115,7 @@ class  MonitorCommands extends DrushCommands {
         }
       }
 
-      $logger->critical(t('Profile not included in the new data. UID: %uid'), ['%uid' => $uid]);
+      //$logger->critical(t('Profile not included in the new data. UID: %uid. URL: %url'), ['%uid' => $uid, '%url' => $effective_uri]);
     }
 
     \Drupal::cache()->set("cap:$url_hash", $response);
