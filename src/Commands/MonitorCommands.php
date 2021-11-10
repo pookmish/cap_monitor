@@ -61,12 +61,13 @@ class  MonitorCommands extends DrushCommands {
         $effective_uri = (string) $stats->getEffectiveUri();
       },
     ];
+    $mail = TRUE;
     foreach ($urls as $url) {
       $url .= '&access_token=' . $access_token;
       $result = $this->client->request('get', $url, $options);
       $response = json_decode((string) $result->getBody(), TRUE);
 
-      if (empty($reponse['values'])) {
+      if (empty($reponse['values']) || !count($response['values'])) {
         $logger = \Drupal::logger('cap_monitor');
         $logger->critical(t('EMPTY: @body  url: %url'), [
           '@headers' => var_export($result->getHeaders(), TRUE),
@@ -74,6 +75,10 @@ class  MonitorCommands extends DrushCommands {
           '%url' => $effective_uri,
         ]);
 
+        if ($mail) {
+          mail('pookmish@stanford.edu', 'CAP Monitoring', '0 results seen from the CAP API at ' . date('Y-m-d H:i') . PHP_EOL . PHP_EOL . $result->getBody() . PHP_EOL . PHP_EOL . var_export($result->getHeaders(), TRUE));
+          $mail = FALSE;
+        }
       }
       $this->compareCapResponses($url, $response, $effective_uri);
     }
