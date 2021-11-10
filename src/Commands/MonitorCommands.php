@@ -6,7 +6,9 @@ use Drupal\Core\Site\Settings;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\Client;
 use GuzzleHttp\TransferStats;
-use Drupal\Core\Cache\Cache;;
+use Drupal\Core\Cache\Cache;
+
+;
 
 class  MonitorCommands extends DrushCommands {
 
@@ -60,13 +62,14 @@ class  MonitorCommands extends DrushCommands {
       },
     ];
     foreach ($urls as $url) {
-      $url .= '&access_token='. $access_token;
+      $url .= '&access_token=' . $access_token;
       $result = $this->client->request('get', $url, $options);
       $response = json_decode((string) $result->getBody(), TRUE);
 
       if (empty($reponse['values'])) {
+        $logger = \Drupal::logger('cap_monitor');
         $logger->critical(t('EMPTY: @body  url: %url'), [
-          '@headers' => $headers,
+          '@headers' => var_export($result->getHeaders(), TRUE),
           '@body' => $result->getBody(),
           '%url' => $effective_uri,
         ]);
