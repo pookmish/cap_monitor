@@ -8,8 +8,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\TransferStats;
 use Drupal\Core\Cache\Cache;
 
-;
-
 class  MonitorCommands extends DrushCommands {
 
   const AUTH_URL = 'https://authz.stanford.edu/oauth/token';
@@ -27,6 +25,7 @@ class  MonitorCommands extends DrushCommands {
    * @command cap:log
    */
   public function checkCap() {
+    \Drupal::messenger()->addMessage('Ran at ' . date('Y-m-d h:i:s'));
     $access_token = $this->getAccessToken();
     $urls = [
       'https://cap.stanford.edu/cap-api/api/profiles/v1?privGroups=BIOENGINEERING:FACULTY,BIOE:MASTERS,BIOE:COTERM,BIOE:PHD1,BIOE:PHD2,BIOE:PHD3,BIOE:PHD4,BIOE:PHD5,BIOE:PHD6,BIOE:PHD7,BIOE:POSTDOCS,BIOENGINEERING:STAFF&p=1&ps=15&whitelist=uid,displayName',
@@ -77,7 +76,7 @@ class  MonitorCommands extends DrushCommands {
 
         if ($mail) {
           $headers = "From: pookmish@stanford.edu\r\n";
-          mail('pookmish@stanford.edu', 'CAP Monitoring', '0 results seen from the CAP API at ' . date('Y-m-d H:i') . PHP_EOL . PHP_EOL . $result->getBody() . PHP_EOL . PHP_EOL . var_export($result->getHeaders(), TRUE), $headers);
+          mail('pookmish@stanford.edu', 'CAP Monitoring', '0 results seen from the CAP API at ' . date('Y-m-d H:i') . PHP_EOL . PHP_EOL . $result->getBody() . PHP_EOL . PHP_EOL . var_export($result->getHeaders(), TRUE) . PHP_EOL.PHP_EOL . 'Response code: ' . $response->getStatusCode(), $headers);
           $mail = FALSE;
         }
       }
