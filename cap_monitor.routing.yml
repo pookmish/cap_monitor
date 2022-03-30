@@ -1,0 +1,7 @@
+cap_monitor.drupal_actions_resource:
+  path: 'api/drupal'
+  defaults:
+    _controller: '\Drupal\cap_monitor\Controller\DrupalRequestController::post'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'
